@@ -21,11 +21,14 @@ Installing the dependencies locally means that they will be cleanly removed when
 
 1. Install the dependencies using the above command
 2. Register your bot in the [Discord Developer Portal](https://discord.com/developers/applications) and get its bot token.
-3. Enable Discord developer options and copy the server ID of the server that the bot will be operating in.
-4. Create a `.env`-file next to the `main.py`-file with the following contents:
+3. Enable Discord developer options
+4. Copy the server ID of the server that the bot will be operating in.
+5. Copy the channel ID of the text channel for the `flag`-command. 
+6. Create a `.env`-file next to the `main.py`-file with the following contents:
 ```
 ENEMY_FLAGGER_BOT_TOKEN=<BOT-TOKEN>
 ENEMY_FLAGGER_GUILD_ID=<SERVER-ID>
+ENEMY_FLAGGER_FLAG_CHANNEL_ID=<CHANNEL-ID>
 ```
 5. Run the `main.py` (the bot will be online as long as the program is running)
 

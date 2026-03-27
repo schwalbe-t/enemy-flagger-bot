@@ -15,8 +15,9 @@ from discord import app_commands
 
 load_dotenv()
 
-botToken = os.getenv("ENEMY_FLAGGER_BOT_TOKEN")
-guildId = os.getenv("ENEMY_FLAGGER_GUILD_ID")
+bot_token = os.getenv("ENEMY_FLAGGER_BOT_TOKEN")
+guild_id = int(os.getenv("ENEMY_FLAGGER_GUILD_ID"))
+flag_channel_id = int(os.getenv("ENEMY_FLAGGER_FLAG_CHANNEL_ID"))
 
 
 storage_path = Path("history.json")
@@ -49,9 +50,9 @@ def create_user_report(time: int, reporter_id: int, status: UserStatus):
         "status": status
     }
 
-def create_user_data(history: list[UserReport] = []):
+def create_user_data():
     return {
-        "history": history
+        "history": []
     }
 
 def storage_get_user(storage, user_id):
@@ -70,16 +71,19 @@ tree = app_commands.CommandTree(client)
 
 @client.event
 async def on_ready():
-    await tree.sync(guild=discord.Object(id=guildId))
+    await tree.sync(guild=discord.Object(id=guild_id))
     print(f"Logged in as '{client.user}'")
 
 
 @tree.command(
     name="flag",
     description="Flag a user as friendly or an enemy",
-    guild=discord.Object(id=guildId)
+    guild=discord.Object(id=guild_id)
 )
 async def flag(ctx, user: UserId, status: UserStatus):
+    if ctx.channel.id != flag_channel_id:
+        await ctx.response.send_message("The `flag`-command cannot be used in this channel.")
+        return
     reporter_id = ctx.user.id
     now = int(time.time())
     user_data = storage_get_user(storage, user)
@@ -91,7 +95,7 @@ async def flag(ctx, user: UserId, status: UserStatus):
 @tree.command(
     name="lookup",
     description="Look up the history of a user",
-    guild=discord.Object(id=guildId)
+    guild=discord.Object(id=guild_id)
 )
 async def lookup(ctx, user: UserId):
     user_data = storage_get_user(storage, user)
@@ -142,4 +146,4 @@ async def lookup(ctx, user: UserId):
 
 
 if __name__ == "__main__":
-    client.run(botToken)
+    client.run(bot_token)
