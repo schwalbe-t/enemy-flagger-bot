@@ -43,12 +43,15 @@ def write_storage(storage):
 UserId = str
 UserStatus = Literal["friend", "enemy", "neutral"]
 
-def create_user_report(time: int, reporter_id: int, status: UserStatus):
-    return {
+def create_user_report(time: int, reporter_id: int, status: UserStatus, note: str | None):
+    report = {
         "time": time,
         "reporter_id": reporter_id,
         "status": status
     }
+    if report is not None:
+        report["note"] = note
+    return report
 
 def create_user_data():
     return {
@@ -80,14 +83,14 @@ async def on_ready():
     description="Flag a user as friendly or an enemy",
     guild=discord.Object(id=guild_id)
 )
-async def flag(ctx, user: UserId, status: UserStatus):
+async def flag(ctx, user: UserId, status: UserStatus, note: str | None = None):
     if ctx.channel.id != flag_channel_id:
         await ctx.response.send_message("The `flag`-command cannot be used in this channel.")
         return
     reporter_id = ctx.user.id
     now = int(time.time())
     user_data = storage_get_user(storage, user)
-    user_data["history"].append(create_user_report(now, reporter_id, status))
+    user_data["history"].append(create_user_report(now, reporter_id, status, note))
     write_storage(storage)
     await ctx.response.send_message(f"Flagged user `{user}` as **{status}**.")
     pass
@@ -139,6 +142,12 @@ async def lookup(ctx, user: UserId):
     if last_report_times["enemy"] != 0:
         result += f" (last <t:{last_report_times["enemy"]}:R>)"
     result += "\n"
+    if any("note" in r for r in user_reports):
+        result += "\n"
+        for report in user_reports:
+            if "note" in report:
+                result += f"> {report["note"]}\n"
+                result += f"-# (Marked as **{report["status"]}** by <@{report["reporter_id"]}> <t:{report["time"]}:R>)\n"
     await ctx.response.send_message(
         result,
         allowed_mentions=discord.AllowedMentions(users=[])
